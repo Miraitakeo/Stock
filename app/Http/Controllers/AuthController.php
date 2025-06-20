@@ -20,8 +20,8 @@ class AuthController extends Controller
 
         // Hardcoded admin user (replace with database check in production)
         $adminUser = [
-            'email' => 'admin@example.com',
-            'password' => 'admin123',
+            'email' => 'admin@stockcontrol.com',
+            'password' => 'SecurePassword123!',
             'name' => 'System Administrator'
         ];
 
