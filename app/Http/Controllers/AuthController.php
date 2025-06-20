@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -11,31 +13,28 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string|min:8',
-        ]);
+public function login(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string|min:8',
+    ]);
 
-        // Hardcoded admin user (replace with database check in production)
-        $adminUser = [
-            'email' => 'admin@stockcontrol.com',
-            'password' => 'SecurePassword123!',
-            'name' => 'System Administrator'
-        ];
+    $user = User::where('email', $credentials['email'])->first();
 
-        if ($request->email === $adminUser['email'] && 
-            $request->password === $adminUser['password']) {
-            $request->session()->put('authenticated', true);
-            $request->session()->put('user', $adminUser);
-            return redirect()->intended(route('dashboard'));
-        }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+    if (!$user || !$user->is_admin || !Hash::check($credentials['password'], $user->password)) {
+        return back()->withErrors(['email' => 'Invalid admin credentials'])->onlyInput('email');
     }
+
+    $request->session()->put('authenticated', true);
+    $request->session()->put('user', [
+        'id' => $user->id,
+        'email' => $user->email,
+        'name' => $user->name,
+    ]);
+
+    return redirect()->route('dashboard');
+}
 
     public function logout(Request $request)
     {
